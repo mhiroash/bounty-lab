@@ -4,7 +4,7 @@
 # SEGURANÇA: o token do Duo/GitLab entra SEMPRE pela variável CI/CD `GITLAB_TOKEN`
 # mascarada (Settings > CI/CD > Variables) e é consumido por
 # `glab auth login --token "$GITLAB_TOKEN"`.
-# PROIBIDO passar o token por heredoc/stdin de shell ("--stdin" com redireccionamento):
+# PROIBIDO passar o token por heredoc/stdin de shell ("--stdin" com redirecionamento):
 # o shell ecoa o valor do token no log do job.
 # O regulamento exige histórico de CI/CD PÚBLICO — um token vazado ali é o pior
 # cenário possível e desqualifica a submissão.

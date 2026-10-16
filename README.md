@@ -4,7 +4,7 @@ Automacao hands-off de DevSecOps com **GitLab Duo Agent Platform**, submetida ao
 hackathon **GitLab Transcend - Life After Code** (categoria *Best Hands-off Agent*,
 **Path A: Start Fresh**).
 
-## O que fazo
+## O que faz
 
 Um push ou uma merge request dispara uma cadeia de agentes que corre o ciclo
 pos-codigo **sem intervencao humana**:
@@ -14,7 +14,7 @@ pos-codigo **sem intervencao humana**:
 2. **Abertura de merge request** - o agente `open_mr` abre a MR para `main` com o
    resumo da revisao como descricao.
 
-O humano recebe apenas o sumario final. E exatamente o padrao descrito no
+O humano recebe apenas o sumario final. E exactamente o padrao descrito no
 regulamento do hackathon:
 
 > _"You push code. Agents handle code review, fix a failing pipeline, remediate a
