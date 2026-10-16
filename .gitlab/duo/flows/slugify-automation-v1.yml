@@ -64,6 +64,6 @@ routers:
 flow:
   entry_point: "review_mr"
 
-# Fica fora deste flow (a plataforma executa so os componentes acima):
+# Fica fora deste flow (ver provas/flow_v1_validacao.md §8):
 # - security_scan, deploy e monitor -> jobs do .gitlab-ci.yml
 # - production_approval -> gate na UI (environments/protected)
