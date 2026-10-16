@@ -1,7 +1,6 @@
 # bounty-lab
 
 Hands-off DevSecOps agent for the GitLab Duo Agent Platform.
-
 Submission for the **GitLab Transcend Hackathon — Life After Code**, category
 **Best Hands-off Agent**. The repository is a small, self-contained Node.js
 project whose only purpose is to give the agent a real codebase to operate on:
