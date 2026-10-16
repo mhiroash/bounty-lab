@@ -1,0 +1,69 @@
+version: "v1"
+environment: ambient
+coding_environment: full
+components:
+  - name: "review_mr"
+    type: AgentComponent
+    prompt_id: "review_mr_prompt"
+    prompt_version: null
+    inputs:
+      - from: "context:project_id"
+        as: "project_id"
+      - from: "context:goal"
+        as: "mr_iid"
+    toolset:
+      - "get_repository_file"
+      - "get_repository_files"
+    ui_log_events:
+      - "on_agent_final_answer"
+  - name: "open_mr"
+    type: AgentComponent
+    prompt_id: "open_mr_prompt"
+    prompt_version: null
+    inputs:
+      - from: "context:project_id"
+        as: "project_id"
+      - from: "review_mr"
+        as: "review_output"
+    toolset:
+      - "get_merge_request"
+      - "create_merge_request"
+    ui_log_events:
+      - "on_agent_final_answer"
+prompts:
+  - prompt_id: "review_mr_prompt"
+    name: "Merge Request Review"
+    unit_primitives: []
+    prompt_template:
+      system: >-
+        You are a GitLab Duo agent that reviews merge requests. Read the changed
+        files and report concrete findings: correctness, security and missing tests.
+      user: >-
+        Review merge request {{mr_iid}} in project {{project_id}}. Read the changed
+        files with the available repository tools and answer with a short review.
+    params:
+      timeout: 180
+  - prompt_id: "open_mr_prompt"
+    name: "Open Merge Request"
+    unit_primitives: []
+    prompt_template:
+      system: >-
+        You are a GitLab Duo agent that opens a merge request without human input.
+        Use the review output you are given as the merge request description.
+      user: >-
+        Using this review for project {{project_id}}, open a merge request with the
+        review summary as its description.
+        Review output: {{review_output}}
+    params:
+      timeout: 180
+routers:
+  - from: "review_mr"
+    to: "open_mr"
+  - from: "open_mr"
+    to: "end"
+flow:
+  entry_point: "review_mr"
+
+# Fica fora deste flow (ver provas/flow_v1_validacao.md §8):
+# - security_scan, deploy e monitor -> jobs do .gitlab-ci.yml
+# - production_approval -> gate na UI (environments/protected)

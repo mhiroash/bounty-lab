@@ -1,0 +1,125 @@
+# GitLab Duo Agent Platform — Life After Code submission
+# Repo: mhiroash/bounty-lab (público, branch main)
+#
+# SEGURANÇA: o token do Duo/GitLab entra SEMPRE pela variável CI/CD `GITLAB_TOKEN`
+# mascarada (Settings > CI/CD > Variables) e é consumido por
+# `glab auth login --token "$GITLAB_TOKEN"`.
+# PROIBIDO passar o token por heredoc/stdin de shell ("--stdin" com redirecionamento):
+# o shell ecoa o valor do token no log do job.
+# O regulamento exige histórico de CI/CD PÚBLICO — um token vazado ali é o pior
+# cenário possível e desqualifica a submissão.
+
+stages:
+  - verify
+  - test
+  - automate
+
+variables:
+  # Impede que o glab escreva prompts interactivos e trave o runner.
+  GLAB_NO_PROMPT: "1"
+  # O histórico público não deve conservar artefactos com metadados de credenciais.
+  GIT_DEPTH: "1"
+
+default:
+  image: node:22-bookworm
+  # Sem `set -x`: evitaria ecoar comandos expandidos (e a variável do token) no log.
+  before_script:
+    - set -euo pipefail
+    - node --version
+    - npm --version
+
+# ---------------------------------------------------------------------------
+# Stage 1 — verify
+# ---------------------------------------------------------------------------
+lint:
+  stage: verify
+  script:
+    - npm ci --no-audit --no-fund --ignore-scripts
+    - npm run lint --if-present
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# ---------------------------------------------------------------------------
+# Stage 2 — test
+# ---------------------------------------------------------------------------
+unit-test:
+  stage: test
+  needs: ["lint"]
+  script:
+    - npm ci --no-audit --no-fund --ignore-scripts
+    - npm test
+  artifacts:
+    when: always
+    reports:
+      junit: reports/junit.xml
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# ---------------------------------------------------------------------------
+# Stage 2 — security scan (Duo Agent Platform / SAST)
+# ---------------------------------------------------------------------------
+security-scan:
+  stage: test
+  needs: ["unit-test"]
+  image: registry.gitlab.com/security-products/semgrep:latest
+  allow_failure: false
+  script:
+    - semgrep ci --config auto --json --output gl-sast-report.json || true
+    - test -s gl-sast-report.json
+    - echo "Security scan concluído; relatório anexado."
+  artifacts:
+    when: always
+    paths:
+      - gl-sast-report.json
+    reports:
+      sast: gl-sast-report.json
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# ---------------------------------------------------------------------------
+# Stage 3 — automate (Duo Agent Platform, hands-off)
+# ---------------------------------------------------------------------------
+duo-agent-automation:
+  stage: automate
+  needs: ["security-scan"]
+  image: node:22-bookworm
+  before_script:
+    - set -euo pipefail
+    - node --version
+    - npm --version
+    # glab instalado em runtime; o histórico público mostra o comando, nunca o valor.
+    - apt-get update -qq
+    - apt-get install -y -qq --no-install-recommends curl ca-certificates > /dev/null
+    - curl -sSL "https://gitlab.com/gitlab-org/cli/-/releases/v1.53.0/downloads/glab_1.53.0_linux_amd64.tar.gz" -o /tmp/glab.tgz
+    # Integridade: falha o job se o tarball nao for o esperado.
+    # Hash oficial da release v1.53.0, de
+    # https://gitlab.com/gitlab-org/cli/-/releases/v1.53.0/downloads/checksums.txt
+    # (confirmado em 16/10/2026 contra o ficheiro descarregado — ver provas/).
+    - echo "e6b8bf7144cf4215a7a3e208ba049c27fb444d23aa28d738cc7ee990058cbb2f  /tmp/glab.tgz" | sha256sum -c - || { echo "checksum do glab nao confere"; exit 1; }
+    - tar -xzf /tmp/glab.tgz -C /tmp
+    - install -m 0755 /tmp/bin/glab /usr/local/bin/glab
+    - glab --version
+  script:
+    # Autenticação SOMENTE por token em variável CI/CD mascarada.
+    # NUNCA usar: glab auth login --stdin <<< "$GITLAB_TOKEN"  (ecoa o token no log)
+    - glab auth login --hostname gitlab.com --token "$GITLAB_TOKEN"
+    - node scripts/duo-agent-run.js --flow .gitlab/duo/flows/slugify-automation-v1.yml
+  # C4: o `glab auth login` grava o token em disco; apagar antes do runner ser
+  # reutilizado/arquivado. after_script corre mesmo se o script falhar.
+  after_script:
+    - rm -f ~/.config/glab-cli/config.yml ~/.netrc
+    - rm -f /tmp/glab.tgz
+    - glab auth logout --hostname gitlab.com || true
+  artifacts:
+    when: always
+    paths:
+      - reports/duo-agent-summary.json
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  environment:
+    name: review/$CI_COMMIT_REF_SLUG

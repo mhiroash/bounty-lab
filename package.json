@@ -1,0 +1,14 @@
+{
+  "name": "bounty-lab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GitLab Duo Agent Platform - Life After Code submission (hands-off DevSecOps)",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "lint": "node scripts/lint.js",
+    "test": "node --test test/*.test.js"
+  }
+}

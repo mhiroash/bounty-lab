@@ -1,0 +1,22 @@
+# C7 — o repo publico leva so o entregavel.
+# Relatorios internos e material de trabalho (nao publicar):
+plano-tecnico.md
+plano-tecnico-v4.md
+relatorio-seguranca.md
+revisao-arquitetura.md
+veredicto-agentes.md
+veredicto-agentes.md.backup
+viabilidade-duo-platform.md
+_docs/
+provas/
+
+# Ruido de sistema
+node_modules/
+*.log
+.DS_Store
+
+# --- Correccao 2026-10-16: ficheiros internos que escapavam ao filtro ---
+TASK-*.md
+relatorio-correccoes-*.md
+.snapshot-*/
+*.backup
