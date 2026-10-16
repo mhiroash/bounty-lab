@@ -12,8 +12,8 @@ project:
   name: bounty-lab
   repository: mhiroash/bounty-lab
   default_branch: main
-  # Path A (Start Fresh): projeto novo, criado dentro do Submission Period (05/10/2026 10:00 UTC - 27/10/2026 13:00 UTC).
-  # Ver plano-tecnico-v4.md, secao 1-A (Nota de Pivot): o Path B exigia um projeto MIT pre-existente, que nao existe.
+  # Path A (Start Fresh): projeto novo, criado dentro do Submission Period
+  # (05/10/2026 10:00 UTC - 27/10/2026 13:00 UTC).
   automation_started_on: "2026-10-16"
 
 platform:

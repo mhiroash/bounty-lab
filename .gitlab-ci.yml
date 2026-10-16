@@ -98,7 +98,7 @@ duo-agent-automation:
     # Integridade: falha o job se o tarball nao for o esperado.
     # Hash oficial da release v1.53.0, de
     # https://gitlab.com/gitlab-org/cli/-/releases/v1.53.0/downloads/checksums.txt
-    # (confirmado em 16/10/2026 contra o ficheiro descarregado — ver provas/).
+    # (confirmado em 16/10/2026 contra o ficheiro descarregado).
     - echo "e6b8bf7144cf4215a7a3e208ba049c27fb444d23aa28d738cc7ee990058cbb2f  /tmp/glab.tgz" | sha256sum -c - || { echo "checksum do glab nao confere"; exit 1; }
     - tar -xzf /tmp/glab.tgz -C /tmp
     - install -m 0755 /tmp/bin/glab /usr/local/bin/glab
